@@ -19,6 +19,26 @@ Adapt your CV to match any job posting in seconds.
 - Subscription management with Mercado Pago integration.
 - Secure authentication with email verification.
 
+## Ofertas del día con CV adaptado
+
+La home (`/`) es una demo en vivo: ofertas reales de los últimos días en varios países, cada una con un CV adaptado. Cada usuario suscripto configura sus búsquedas en `/panel/ofertas`.
+
+**Flujo:** `jobs:sync` (por defecto 07:17 y 19:17) → para cada búsqueda consulta solo los portales que cubren ese país → descarta ofertas viejas o de zonas remotas que no aceptan al candidato → deduplica entre portales → `ScoreJobMatch` puntúa la compatibilidad → si supera `JOB_SEARCH_MIN_MATCH_SCORE`, `TailorResume` genera el CV con las convenciones del país (`app/JobSearch/Regions.php`) y se guarda como un `Document` más.
+
+| Región | Fuentes |
+|---|---|
+| LatAm | Google Jobs (JSearch), Get on Board, Jooble, Adzuna (BR/MX), Remotive |
+| Norteamérica | Google Jobs, Adzuna, Jooble, Remotive |
+| Europa | Google Jobs, Adzuna, Arbeitnow, Jooble, Remotive |
+| Todas | Páginas de empleo de empresas (Greenhouse, Lever, Ashby) en `config/jobsearch.php` |
+
+**Configuración**
+
+1. `.env`: `OPENAI_API_KEY`, `JSEARCH_API_KEY` (RapidAPI), `ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `JOOBLE_API_KEY`. Get on Board, Arbeitnow y Remotive no necesitan clave; un portal sin clave se omite.
+2. `php artisan migrate`, más `php artisan queue:work` y el scheduler (`php artisan schedule:work` en local, cron `schedule:run` en el servidor).
+3. Demo de la home: `php artisan jobs:demo ruta/al/cv.pdf --keywords="Laravel developer" --countries=uy,us,es`.
+4. Ver qué devuelve cada portal: `php artisan jobs:sync`.
+
 ## Installation
 
 1. Clone the repository: `git clone https://github.com/elkiki99/ats-boost.git`

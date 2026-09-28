@@ -19,12 +19,15 @@ class TailorResume
 {
     public function __construct(private readonly StructuredCompletion $completion) {}
 
-    public function handle(ResumeData $resume, JobPostingData $job, string $jobDescription): ResumeData
+    /**
+     * @param  string|null  $conventions  Convenciones de CV del país del puesto (ver Regions::cvConventions).
+     */
+    public function handle(ResumeData $resume, JobPostingData $job, string $jobDescription, ?string $conventions = null): ResumeData
     {
         $payload = $this->completion->run(
             task: 'tailor-resume',
             model: config('resume.models.tailoring'),
-            systemPrompt: ResumePrompts::tailorSystem($job->language),
+            systemPrompt: ResumePrompts::tailorSystem($job->language, $conventions),
             userPrompt: ResumePrompts::tailorUser($resume, $job, $jobDescription),
             schema: ResumeSchema::structure(),
             // Algo de temperatura: con 0 el modelo copia las viñetas originales

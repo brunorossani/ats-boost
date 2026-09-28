@@ -5,6 +5,12 @@
 
         $tools = [
             [
+                'route' => 'jobs.feed',
+                'icon' => 'briefcase',
+                'title' => __('Mis ofertas del día'),
+                'text' => __('Ofertas nuevas de los portales de tu país, filtradas por compatibilidad y cada una con tu CV adaptado.'),
+            ],
+            [
                 'route' => 'resume.tailor',
                 'icon' => 'sparkles',
                 'title' => __('Adaptar currículum'),
@@ -53,7 +59,7 @@
         </flux:callout>
     @endunless
 
-    <div class="grid gap-4 md:grid-cols-3">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         @foreach ($tools as $tool)
             <a href="{{ route($tool['route']) }}" wire:navigate class="group">
                 <flux:card class="h-full transition group-hover:border-accent">

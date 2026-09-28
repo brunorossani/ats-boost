@@ -18,6 +18,8 @@
             <flux:navlist.group :heading="__('Plataforma')" class="grid">
                 <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
                     wire:navigate>{{ __('Panel de control') }}</flux:navlist.item>
+                <flux:navlist.item icon="briefcase" :href="route('jobs.feed')" :current="request()->routeIs('jobs.feed')"
+                    wire:navigate>{{ __('Mis ofertas') }}</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 

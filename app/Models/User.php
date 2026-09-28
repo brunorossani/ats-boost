@@ -64,6 +64,22 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<JobSearchProfile, $this>
+     */
+    public function jobSearchProfiles(): HasMany
+    {
+        return $this->hasMany(JobSearchProfile::class);
+    }
+
+    /**
+     * @return HasMany<JobMatch, $this>
+     */
+    public function jobMatches(): HasMany
+    {
+        return $this->hasMany(JobMatch::class);
+    }
+
+    /**
      * @return HasMany<Subscriber, $this>
      */
     public function subscribers(): HasMany

@@ -42,6 +42,19 @@ class DocumentController extends Controller
         return $this->pdf($document, disposition: 'inline');
     }
 
+    /**
+     * CVs de la demo pública de la home: sin login, pero solo los del usuario demo.
+     */
+    public function demo(Document $document, string $disposition = 'inline'): Response
+    {
+        abort_unless(
+            $document->user()->where('email', config('jobsearch.demo.user_email'))->exists(),
+            404,
+        );
+
+        return $this->pdf($document, disposition: $disposition === 'attachment' ? 'attachment' : 'inline');
+    }
+
     private function pdf(Document $document, string $disposition): Response
     {
         $binary = $document->type->isResume()

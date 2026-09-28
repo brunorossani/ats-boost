@@ -55,9 +55,10 @@ final class ResumePrompts
         return "--- TEXTO DEL CV ---\n{$cvText}";
     }
 
-    public static function tailorSystem(Language $language): string
+    public static function tailorSystem(Language $language, ?string $conventions = null): string
     {
         $honesty = self::HONESTY;
+        $regional = $conventions ? "\n\nCONVENCIONES DEL PAÍS DEL PUESTO:\n{$conventions}" : '';
 
         return <<<TXT
         Sos un motor profesional de adaptación de currículums. Recibís un CV ya
@@ -84,7 +85,7 @@ final class ResumePrompts
         IDIOMA:
         - Escribí toda la salida en {$language->promptName()}, incluidas las etiquetas de
           las categorías de habilidades. Los nombres propios de empresas, instituciones y
-          tecnologías se dejan como están.
+          tecnologías se dejan como están.{$regional}
         TXT;
     }
 
