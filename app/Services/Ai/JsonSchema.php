@@ -6,8 +6,8 @@ namespace App\Services\Ai;
  * Un esquema con nombre, listo para la salida estructurada de Claude.
  *
  * Cada objeto declara `additionalProperties: false` y lista **todas** sus
- * propiedades en `required`; los campos opcionales se expresan permitiendo
- * `null`. Claude no admite restricciones numéricas (`minimum`/`maximum`), así
+ * propiedades en `required`; los campos opcionales se expresan con cadena
+ * vacía. Claude no admite restricciones numéricas (`minimum`/`maximum`), así
  * que los rangos van en la descripción y se acotan en el DTO que lee la
  * respuesta. Los helpers construyen los nodos ya conformes.
  */
@@ -57,16 +57,17 @@ final readonly class JsonSchema
     }
 
     /**
-     * Cadena que el modelo puede dejar en null cuando el dato no está en el
-     * CV. Es la forma de tener campos opcionales bajo `strict`.
+     * Campo opcional. Claude admite como máximo 16 uniones (`anyOf`) por
+     * esquema y el CV tiene más campos opcionales que eso, así que el hueco se
+     * expresa con cadena vacía: `Cast::nullableString` la convierte en null.
      *
      * @return array<string, mixed>
      */
     public static function nullableString(string $description): array
     {
         return [
-            'anyOf' => [['type' => 'string'], ['type' => 'null']],
-            'description' => $description.' Devolvé null si el dato no aparece en la fuente; no lo inventes.',
+            'type' => 'string',
+            'description' => $description.' Devolvé una cadena vacía si el dato no aparece en la fuente; no lo inventes.',
         ];
     }
 

@@ -25,7 +25,7 @@ final class ResumePrompts
     - Solo podés usar hechos presentes en el CV original.
     - Nunca agregues empresas, cargos, títulos, certificaciones, años de experiencia,
       tecnologías ni métricas que no estén en la fuente.
-    - Si un dato no aparece, devolvé null o un array vacío. Un hueco es aceptable;
+    - Si un dato no aparece, devolvé una cadena vacía o un array vacío. Un hueco es aceptable;
       un dato falso hace que al candidato lo descarten en la entrevista.
     - Podés reformular, condensar, reordenar y elegir qué destacar. Eso no es inventar.
     TXT;
