@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class MercadoPagoService
 {
@@ -37,6 +37,18 @@ class MercadoPagoService
         return Http::withToken($this->accessToken)
             ->timeout(10)
             ->get("{$this->apiUrl}/preapproval/{$id}")
+            ->throw()
+            ->json();
+    }
+
+    /**
+     * Cobro recurrente de una suscripción. Trae `preapproval_id`.
+     */
+    public function getAuthorizedPayment(string $id): array
+    {
+        return Http::withToken($this->accessToken)
+            ->timeout(10)
+            ->get("{$this->apiUrl}/authorized_payments/{$id}")
             ->throw()
             ->json();
     }
