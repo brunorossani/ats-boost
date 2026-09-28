@@ -47,6 +47,7 @@ return [
 
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
+        'workspace_id' => env('ANTHROPIC_WORKSPACE_ID'),
     ],
 
 ];

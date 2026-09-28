@@ -77,3 +77,16 @@ it('convierte una caída de la API en un error legible', function (): void {
     expect(fn () => runCompletion('claude-haiku-4-5'))
         ->toThrow(ResumeGenerationException::class, 'no está respondiendo');
 });
+
+it('manda el workspace solo cuando está configurado', function (): void {
+    fakeChatResponses(['score' => 1, 'note' => null], ['score' => 2, 'note' => null]);
+
+    runCompletion('claude-haiku-4-5');
+    config(['services.anthropic.workspace_id' => 'wrkspc_test']);
+    runCompletion('claude-haiku-4-5');
+
+    $history = app('tests.chat-history');
+
+    expect($history[0]['request']->hasHeader('anthropic-workspace-id'))->toBeFalse()
+        ->and($history[1]['request']->getHeaderLine('anthropic-workspace-id'))->toBe('wrkspc_test');
+});

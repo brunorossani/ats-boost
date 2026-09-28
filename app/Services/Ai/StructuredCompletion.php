@@ -81,6 +81,8 @@ class StructuredCompletion
             ]),
             fallbacks: $withFallbacks ? 'default' : null,
             betas: $withFallbacks ? ['server-side-fallback-2026-07-01'] : null,
+            // Solo hace falta con claves de organización que no están atadas a un workspace.
+            workspaceID: config('services.anthropic.workspace_id') ?: null,
         );
 
         if ($message->stopReason === 'refusal') {
