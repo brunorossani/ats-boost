@@ -17,7 +17,7 @@ use Livewire\WithFileUploads;
  * El límite se cuenta contra el RateLimiter y no contra la sesión. La versión
  * anterior guardaba `cv_usage_count` en la sesión del navegador, así que
  * borrar las cookies devolvía las tres pruebas gratis: cada reinicio costaba
- * siete llamadas a OpenAI pagadas por el producto.
+ * siete llamadas al modelo pagadas por el producto.
  */
 class Demo extends Component
 {
@@ -58,7 +58,7 @@ class Demo extends Component
         }
 
         // Se consume el cupo recién cuando la generación salió bien: si falla
-        // la API de OpenAI, el intento no se le cobra al visitante.
+        // la API de Claude, el intento no se le cobra al visitante.
         RateLimiter::hit($this->limiterKey(), $this->decaySeconds());
 
         $this->result = $result['resume']->toArray();

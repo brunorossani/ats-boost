@@ -1,10 +1,14 @@
 <?php
 
+use Anthropic\Client;
 use App\Models\Subscriber;
 use App\Models\User;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\UploadedFile;
-use OpenAI\Laravel\Facades\OpenAI;
-use OpenAI\Responses\Chat\CreateResponse;
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
@@ -29,23 +33,51 @@ function subscribedUser(array $attributes = []): User
 }
 
 /**
- * Encola respuestas del modelo, en orden.
+ * Encola respuestas de Claude, en orden.
  *
- * Cada payload se serializa como JSON en el contenido del mensaje, que es
- * exactamente lo que devuelve la API cuando se pide salida estructurada.
+ * Se usa el cliente real del SDK con un transporte HTTP falso: así el test
+ * también ejercita cómo se arma el pedido. Cada payload viaja como el JSON
+ * del bloque de texto, que es lo que devuelve la API con salida estructurada.
+ * Sin payloads, el primer pedido falla como una caída real de la API.
  *
  * @param  array<string, mixed>  ...$payloads
  */
 function fakeChatResponses(array ...$payloads): void
 {
-    OpenAI::fake(array_map(
-        fn (array $payload): CreateResponse => CreateResponse::fake([
-            'choices' => [
-                ['message' => ['content' => json_encode($payload, JSON_UNESCAPED_UNICODE)]],
-            ],
-        ]),
+    $history = new ArrayObject;
+    $stack = HandlerStack::create(new MockHandler(array_map(
+        fn (array $payload): Response => new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'id' => 'msg_fake',
+            'type' => 'message',
+            'role' => 'assistant',
+            'model' => 'claude-test',
+            'content' => [['type' => 'text', 'text' => json_encode($payload, JSON_UNESCAPED_UNICODE)]],
+            'stop_reason' => 'end_turn',
+            'stop_sequence' => null,
+            'usage' => ['input_tokens' => 1, 'output_tokens' => 1],
+        ])),
         $payloads,
+    )));
+    $stack->push(Middleware::history($history));
+
+    app()->instance('tests.chat-history', $history);
+    app()->instance(Client::class, new Client(
+        apiKey: 'test-key',
+        requestOptions: ['transporter' => new GuzzleClient(['handler' => $stack]), 'maxRetries' => 0],
     ));
+}
+
+/**
+ * Cuerpos JSON de los pedidos enviados a Claude desde el último fakeChatResponses().
+ *
+ * @return list<array<string, mixed>>
+ */
+function sentChatRequests(): array
+{
+    return array_map(
+        fn (array $entry): array => json_decode((string) $entry['request']->getBody(), true),
+        app('tests.chat-history')->getArrayCopy(),
+    );
 }
 
 /**

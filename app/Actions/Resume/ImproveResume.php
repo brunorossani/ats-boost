@@ -4,8 +4,8 @@ namespace App\Actions\Resume;
 
 use App\Data\ResumeData;
 use App\Prompts\ResumePrompts;
-use App\Services\OpenAi\Schemas\ResumeSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\ResumeSchema;
+use App\Services\Ai\StructuredCompletion;
 
 /**
  * Reescribe un currículum sin apuntarlo a ninguna oferta.
@@ -25,7 +25,6 @@ class ImproveResume
             systemPrompt: ResumePrompts::improveSystem($resume->language),
             userPrompt: ResumePrompts::improveUser($resume),
             schema: ResumeSchema::structure(),
-            temperature: 0.3,
         );
 
         return ResumeData::from($payload, $resume->language);

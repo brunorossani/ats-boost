@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Services\OpenAi;
+namespace App\Services\Ai;
 
 /**
- * Un esquema con nombre, listo para el modo `strict` de OpenAI.
+ * Un esquema con nombre, listo para la salida estructurada de Claude.
  *
- * `strict` obliga a que cada objeto declare `additionalProperties: false` y
- * liste **todas** sus propiedades en `required`; los campos opcionales se
- * expresan permitiendo `null`. Los helpers de esta clase construyen los nodos
- * ya conformes para no repetir esa disciplina en cada esquema.
+ * Cada objeto declara `additionalProperties: false` y lista **todas** sus
+ * propiedades en `required`; los campos opcionales se expresan permitiendo
+ * `null`. Claude no admite restricciones numéricas (`minimum`/`maximum`), así
+ * que los rangos van en la descripción y se acotan en el DTO que lee la
+ * respuesta. Los helpers construyen los nodos ya conformes.
  */
 final readonly class JsonSchema
 {
@@ -64,7 +65,7 @@ final readonly class JsonSchema
     public static function nullableString(string $description): array
     {
         return [
-            'type' => ['string', 'null'],
+            'anyOf' => [['type' => 'string'], ['type' => 'null']],
             'description' => $description.' Devolvé null si el dato no aparece en la fuente; no lo inventes.',
         ];
     }
@@ -72,14 +73,9 @@ final readonly class JsonSchema
     /**
      * @return array<string, mixed>
      */
-    public static function integer(string $description, int $minimum = 0, int $maximum = 100): array
+    public static function integer(string $description): array
     {
-        return [
-            'type' => 'integer',
-            'description' => $description,
-            'minimum' => $minimum,
-            'maximum' => $maximum,
-        ];
+        return ['type' => 'integer', 'description' => $description];
     }
 
     /**
@@ -108,20 +104,12 @@ final readonly class JsonSchema
     }
 
     /**
-     * Payload tal como lo espera el parámetro `response_format` del endpoint
-     * de chat completions.
+     * Payload tal como lo espera `output_config.format` de la Messages API.
      *
      * @return array<string, mixed>
      */
-    public function toResponseFormat(): array
+    public function toOutputFormat(): array
     {
-        return [
-            'type' => 'json_schema',
-            'json_schema' => [
-                'name' => $this->name,
-                'strict' => true,
-                'schema' => $this->schema,
-            ],
-        ];
+        return ['type' => 'json_schema', 'schema' => $this->schema];
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\OpenAi\Schemas;
+namespace App\Services\Ai\Schemas;
 
-use App\Services\OpenAi\JsonSchema;
+use App\Services\Ai\JsonSchema;
 
 /**
  * Esquema del currículum estructurado.

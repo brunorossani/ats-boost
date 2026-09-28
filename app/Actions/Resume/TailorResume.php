@@ -6,8 +6,8 @@ use App\Data\ExperienceData;
 use App\Data\JobPostingData;
 use App\Data\ResumeData;
 use App\Prompts\ResumePrompts;
-use App\Services\OpenAi\Schemas\ResumeSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\ResumeSchema;
+use App\Services\Ai\StructuredCompletion;
 
 /**
  * Currículum estructurado + oferta → currículum adaptado.
@@ -30,9 +30,6 @@ class TailorResume
             systemPrompt: ResumePrompts::tailorSystem($job->language, $conventions),
             userPrompt: ResumePrompts::tailorUser($resume, $job, $jobDescription),
             schema: ResumeSchema::structure(),
-            // Algo de temperatura: con 0 el modelo copia las viñetas originales
-            // en lugar de reescribirlas con el vocabulario de la oferta.
-            temperature: 0.3,
         );
 
         return $this->capBullets(ResumeData::from($payload, $job->language));

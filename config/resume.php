@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Modelos de OpenAI
+    | Modelos de Claude
     |--------------------------------------------------------------------------
     |
     | Cada tarea usa el modelo más barato que la resuelve bien. La extracción
@@ -14,11 +14,26 @@ return [
     */
 
     'models' => [
-        'parsing' => env('RESUME_MODEL_PARSING', 'gpt-4.1-mini'),
-        'tailoring' => env('RESUME_MODEL_TAILORING', 'gpt-4.1'),
-        'analysis' => env('RESUME_MODEL_ANALYSIS', 'gpt-4.1-mini'),
-        'cover_letter' => env('RESUME_MODEL_COVER_LETTER', 'gpt-4.1'),
+        'parsing' => env('RESUME_MODEL_PARSING', 'claude-haiku-4-5'),
+        'tailoring' => env('RESUME_MODEL_TAILORING', 'claude-opus-5'),
+        'analysis' => env('RESUME_MODEL_ANALYSIS', 'claude-haiku-4-5'),
+        'cover_letter' => env('RESUME_MODEL_COVER_LETTER', 'claude-opus-5'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Parámetros de la llamada a Claude
+    |--------------------------------------------------------------------------
+    |
+    | `effort` regula cuánto razona el modelo grande (low, medium, high, xhigh,
+    | max). Adaptar un CV se hace mientras el usuario espera, por eso el
+    | default es medium y no el high de la API.
+    |
+    */
+
+    'effort' => env('RESUME_AI_EFFORT', 'medium'),
+    'max_tokens' => (int) env('RESUME_AI_MAX_TOKENS', 16000),
+    'request_timeout' => (float) env('RESUME_AI_TIMEOUT', 120),
 
     /*
     |--------------------------------------------------------------------------

@@ -5,8 +5,8 @@ namespace App\Actions\Jobs;
 use App\Data\Cast;
 use App\Data\ResumeData;
 use App\Prompts\JobMatchPrompts;
-use App\Services\OpenAi\Schemas\JobMatchSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\JobMatchSchema;
+use App\Services\Ai\StructuredCompletion;
 
 /**
  * CV estructurado + oferta → puntaje de compatibilidad con su justificación.
@@ -26,7 +26,6 @@ class ScoreJobMatch
             systemPrompt: JobMatchPrompts::system(),
             userPrompt: JobMatchPrompts::user($resume, $jobText),
             schema: JobMatchSchema::structure(),
-            temperature: 0.0,
         );
 
         return [

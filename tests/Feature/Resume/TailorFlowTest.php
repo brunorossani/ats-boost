@@ -88,7 +88,7 @@ it('rechaza archivos que no son PDF ni TXT', function (): void {
 it('avisa al usuario y no guarda nada cuando el modelo falla', function (): void {
     // Sin respuestas encoladas, el cliente falso lanza excepción en la
     // primera llamada, igual que una caída real de la API.
-    OpenAI\Laravel\Facades\OpenAI::fake();
+    fakeChatResponses();
 
     Livewire::actingAs($this->user)
         ->test(Tailor::class)

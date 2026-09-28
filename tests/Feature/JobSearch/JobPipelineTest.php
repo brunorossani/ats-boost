@@ -15,8 +15,6 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
 use Illuminate\Support\Facades\Queue;
-use OpenAI\Laravel\Facades\OpenAI;
-use OpenAI\Resources\Chat;
 
 function fakeProvider(array $postings): JobProvider
 {
@@ -109,7 +107,7 @@ it('parsea el CV base una sola vez, guarda las ofertas y no duplica la misma ofe
     Queue::assertPushed(ProcessJobMatch::class, 2);
 
     // Al día siguiente la misma oferta llega desde otro portal: no se duplica
-    // y el CV no se vuelve a parsear (no hay más respuestas falsas de OpenAI).
+    // y el CV no se vuelve a parsear (no hay más respuestas falsas de Claude).
     app()->instance(JobSearchEngine::class, new JobSearchEngine([fakeProvider([
         posting('adzuna', 'zz', 'Laravel Developer'),
         posting('adzuna', 'yy', 'Backend Laravel Engineer'),
@@ -144,10 +142,7 @@ it('genera el CV adaptado como documento, con las convenciones del país de la o
         ->and($document->user_id)->toBe($profile->user_id)
         ->and($document->source_filename)->toBe('cv.pdf');
 
-    OpenAI::assertSent(Chat::class, fn (string $method, array $parameters): bool => str_contains(
-        $parameters['messages'][0]['content'],
-        'résumé norteamericano',
-    ));
+    expect(sentChatRequests()[2]['system'])->toContain('résumé norteamericano');
 });
 
 it('no adapta una oferta con baja compatibilidad salvo que el usuario lo pida', function (): void {
@@ -166,8 +161,5 @@ it('no adapta una oferta con baja compatibilidad salvo que el usuario lo pida', 
 
     expect($match->fresh()->status)->toBe(JobMatch::STATUS_READY);
 
-    OpenAI::assertSent(Chat::class, fn (string $method, array $parameters): bool => str_contains(
-        $parameters['messages'][0]['content'],
-        'MCER',
-    ));
+    expect(sentChatRequests()[1]['system'])->toContain('MCER');
 });

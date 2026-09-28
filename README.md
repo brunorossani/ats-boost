@@ -34,7 +34,7 @@ La home (`/`) es una demo en vivo: ofertas reales de los últimos días en vario
 
 **Configuración**
 
-1. `.env`: `OPENAI_API_KEY`, `JSEARCH_API_KEY` (RapidAPI), `ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `JOOBLE_API_KEY`. Get on Board, Arbeitnow y Remotive no necesitan clave; un portal sin clave se omite.
+1. `.env`: `ANTHROPIC_API_KEY`, `JSEARCH_API_KEY` (RapidAPI), `ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `JOOBLE_API_KEY`. Get on Board, Arbeitnow y Remotive no necesitan clave; un portal sin clave se omite.
 2. `php artisan migrate`, más `php artisan queue:work` y el scheduler (`php artisan schedule:work` en local, cron `schedule:run` en el servidor).
 3. Demo de la home: `php artisan jobs:demo ruta/al/cv.pdf --keywords="Laravel developer" --countries=uy,us,es`.
 4. Ver qué devuelve cada portal: `php artisan jobs:sync`.

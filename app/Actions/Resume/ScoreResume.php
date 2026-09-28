@@ -5,8 +5,8 @@ namespace App\Actions\Resume;
 use App\Data\AtsReportData;
 use App\Enums\Language;
 use App\Prompts\AtsPrompts;
-use App\Services\OpenAi\Schemas\AtsReportSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\AtsReportSchema;
+use App\Services\Ai\StructuredCompletion;
 
 /**
  * Puntúa un CV contra criterios ATS y devuelve el desglose.
@@ -30,7 +30,6 @@ class ScoreResume
             systemPrompt: AtsPrompts::system($language),
             userPrompt: AtsPrompts::user($resumeText, $jobDescription),
             schema: AtsReportSchema::structure(),
-            temperature: 0.1,
         );
 
         return AtsReportData::from($payload);

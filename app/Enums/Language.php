@@ -11,7 +11,7 @@ enum Language: string
      * Detecta el idioma por frecuencia de palabras funcionales.
      *
      * Se resuelve localmente a propósito: la versión anterior gastaba una
-     * llamada a OpenAI (y ~1s de latencia) para elegir entre dos opciones.
+     * llamada al modelo (y ~1s de latencia) para elegir entre dos opciones.
      */
     public static function detect(string $text, self $fallback = self::English): self
     {

@@ -6,8 +6,8 @@ use App\Data\CoverLetterData;
 use App\Data\JobPostingData;
 use App\Data\ResumeData;
 use App\Prompts\CoverLetterPrompts;
-use App\Services\OpenAi\Schemas\CoverLetterSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\CoverLetterSchema;
+use App\Services\Ai\StructuredCompletion;
 
 class WriteCoverLetter
 {
@@ -27,7 +27,6 @@ class WriteCoverLetter
             systemPrompt: CoverLetterPrompts::system($language),
             userPrompt: CoverLetterPrompts::user($resume, $job, $jobDescription, $company),
             schema: CoverLetterSchema::structure(),
-            temperature: 0.5,
         );
 
         $letter = CoverLetterData::from($payload, $language);

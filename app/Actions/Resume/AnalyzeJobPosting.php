@@ -5,8 +5,8 @@ namespace App\Actions\Resume;
 use App\Data\JobPostingData;
 use App\Enums\Language;
 use App\Prompts\JobPostingPrompts;
-use App\Services\OpenAi\Schemas\JobPostingSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\JobPostingSchema;
+use App\Services\Ai\StructuredCompletion;
 
 /**
  * Oferta de trabajo → puesto, empresa, palabras clave y requisitos.
@@ -28,7 +28,6 @@ class AnalyzeJobPosting
             systemPrompt: JobPostingPrompts::system($language),
             userPrompt: JobPostingPrompts::user($jobDescription),
             schema: JobPostingSchema::structure(),
-            temperature: 0.0,
         );
 
         return JobPostingData::from($payload, $language);

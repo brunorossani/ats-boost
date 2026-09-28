@@ -5,8 +5,8 @@ namespace App\Actions\Resume;
 use App\Data\ResumeData;
 use App\Enums\Language;
 use App\Prompts\ResumePrompts;
-use App\Services\OpenAi\Schemas\ResumeSchema;
-use App\Services\OpenAi\StructuredCompletion;
+use App\Services\Ai\Schemas\ResumeSchema;
+use App\Services\Ai\StructuredCompletion;
 
 /**
  * Texto plano de un CV → currículum estructurado.
@@ -30,7 +30,6 @@ class ParseResume
             systemPrompt: ResumePrompts::parseSystem($language),
             userPrompt: ResumePrompts::parseUser($resumeText),
             schema: ResumeSchema::structure(),
-            temperature: 0.0,
         );
 
         return ResumeData::from($payload, $language);

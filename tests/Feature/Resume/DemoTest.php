@@ -48,7 +48,7 @@ it('descuenta el cupo contra el limitador y no contra la sesión', function (): 
 });
 
 it('no consume cupo cuando falla la llamada al modelo', function (): void {
-    OpenAI\Laravel\Facades\OpenAI::fake();
+    fakeChatResponses();
 
     $before = RateLimiter::remaining('resume-demo:127.0.0.1', (int) config('resume.limits.demo_generations'));
 
