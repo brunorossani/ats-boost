@@ -9,16 +9,23 @@ class MercadoPagoService
 {
     protected string $apiUrl = 'https://api.mercadopago.com';
 
-    public function __construct(
-        protected string $accessToken = ''
-    ) {
-        $this->accessToken = config('services.mercadopago.access_token');
+    protected string $accessToken;
+
+    public function __construct(?string $accessToken = null)
+    {
+        $this->accessToken = $accessToken ?: (string) config('services.mercadopago.access_token', '');
 
         if (! $this->accessToken) {
             throw new \Exception('Token de acceso de MercadoPago no configurado. Configura MERCADOPAGO_ACCESS_TOKEN en .env');
         }
     }
 
+    /**
+     * NO se le agrega retry a propósito: es un POST que crea una suscripción
+     * real (cobra dinero). Reintentar un timeout/fallo de red podría crear
+     * una suscripción duplicada si el primer intento sí llegó a procesarse
+     * del lado de MercadoPago pero la respuesta no volvió a tiempo.
+     */
     public function createSubscription(array $data): array
     {
         $response = Http::withToken($this->accessToken)
@@ -36,6 +43,7 @@ class MercadoPagoService
     {
         return Http::withToken($this->accessToken)
             ->timeout(10)
+            ->retry(2, 200)
             ->get("{$this->apiUrl}/preapproval/{$id}")
             ->throw()
             ->json();
@@ -53,6 +61,7 @@ class MercadoPagoService
     {
         return Http::withToken($this->accessToken)
             ->timeout(10)
+            ->retry(2, 200)
             ->put("{$this->apiUrl}/preapproval/{$id}", $data)
             ->throw()
             ->json();
@@ -62,6 +71,7 @@ class MercadoPagoService
     {
         $response = Http::withToken($this->accessToken)
             ->timeout(10)
+            ->retry(2, 200)
             ->get("{$this->apiUrl}/preapproval_plan/{$planId}");
 
         if ($response->failed()) {

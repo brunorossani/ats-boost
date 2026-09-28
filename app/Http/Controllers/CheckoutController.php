@@ -6,6 +6,12 @@ class CheckoutController extends Controller
 {
     public function start(string $variant)
     {
+        $allowedPlans = array_filter(config('services.mercadopago.plans'));
+
+        if (! in_array($variant, $allowedPlans, true)) {
+            abort(404);
+        }
+
         session(['checkout_variant' => $variant]);
 
         if (! auth()->check()) {

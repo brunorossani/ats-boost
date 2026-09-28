@@ -4,12 +4,13 @@ namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use OpenAI\Laravel\Facades\OpenAI;
 use RuntimeException;
 use Smalot\PdfParser\Parser;
 
 class CoverLetterService
 {
+    public function __construct(private AnthropicService $anthropic) {}
+
     /**
      * Detecta el idioma principal del texto (español, inglés, etc.)
      */
@@ -253,15 +254,8 @@ class CoverLetterService
     {
         $prompt = $this->getPromptInferCandidateProfile($language, $cvText);
 
-        $response = OpenAI::chat()->create([
-            'model' => 'gpt-4.1',
-            'messages' => [
-                ['role' => 'user', 'content' => $prompt],
-            ],
-        ]);
-
         return json_decode(
-            $response->choices[0]->message->content,
+            $this->anthropic->complete($prompt, maxTokens: 256),
             true,
             flags: JSON_THROW_ON_ERROR
         );
@@ -305,13 +299,6 @@ class CoverLetterService
             $placeholderLetter = 'Cover Letter';
         }
 
-        $response = OpenAI::chat()->create([
-            'model' => 'gpt-4.1',
-            'messages' => [
-                ['role' => 'user', 'content' => $prompt],
-            ],
-        ]);
-
-        return trim($response->choices[0]->message->content);
+        return $this->anthropic->complete($prompt);
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class User extends Authenticatable
@@ -70,6 +71,16 @@ class User extends Authenticatable
     public function subscribers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Subscriber::class);
+    }
+
+    public function resumes(): HasMany
+    {
+        return $this->hasMany(Resume::class);
+    }
+
+    public function tailoredResumes(): HasMany
+    {
+        return $this->hasMany(TailoredResume::class);
     }
 
     public function isSubscribed(): bool

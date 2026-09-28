@@ -6,6 +6,7 @@ use App\Actions\MercadoPago\HandleSubscriptionPlanChange;
 use App\Actions\MercadoPago\SyncSubscription;
 use App\Services\MercadoPagoService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Livewire\Component;
 use App\Support\Money;
@@ -17,7 +18,7 @@ class Subscriptions extends Component
     public $newPlan;
     public array $prices = [];
 
-    public function mount(Request $request, MercadoPagoService $mp)
+    public function mount(Request $request)
     {
         if(session('subscription_required')) {
             Flux::toast(
@@ -61,14 +62,42 @@ class Subscriptions extends Component
         }
 
         $this->loadSubscription();
+        $this->loadPrices();
+    }
+
+    /**
+     * Carga los precios de los planes. Si MercadoPago no está disponible
+     * (token no configurado, API caída, etc.) la página igual debe poder
+     * renderizarse: cada plan queda en null en vez de tirar un 500.
+     */
+    protected function loadPrices(): void
+    {
+        try {
+            $mp = app(MercadoPagoService::class);
+        } catch (\Throwable $e) {
+            Log::error('Mercado Pago: servicio no disponible', ['error' => $e->getMessage()]);
+
+            $this->prices = array_fill_keys(array_keys(config('services.mercadopago.plans')), null);
+
+            return;
+        }
 
         foreach (config('services.mercadopago.plans') as $key => $planId) {
-            $price = $mp->getPlanPrice($planId);
+            try {
+                $price = $mp->getPlanPrice($planId);
 
-            $this->prices[$key] = [
-                ...$price,
-                'formatted' => Money::format($price['amount'], $price['currency']),
-            ];
+                $this->prices[$key] = [
+                    ...$price,
+                    'formatted' => Money::format($price['amount'], $price['currency']),
+                ];
+            } catch (\Throwable $e) {
+                Log::error('Mercado Pago: no se pudo obtener el precio del plan', [
+                    'plan' => $key,
+                    'error' => $e->getMessage(),
+                ]);
+
+                $this->prices[$key] = null;
+            }
         }
     }
 
@@ -89,6 +118,20 @@ class Subscriptions extends Component
         }
 
         if ($this->newPlan === $this->subscription->mp_plan_id) {
+            return;
+        }
+
+        // $newPlan es una propiedad pública de Livewire: puede llegar manipulada
+        // desde el cliente sin importar qué opciones renderice el <select>.
+        $allowedPlans = array_filter(config('services.mercadopago.plans'));
+
+        if (! in_array($this->newPlan, $allowedPlans, true)) {
+            Flux::toast(
+                heading: 'Plan inválido',
+                text: 'El plan seleccionado no es válido.',
+                variant: 'danger',
+            );
+
             return;
         }
 
@@ -114,8 +157,23 @@ class Subscriptions extends Component
             return;
         }
 
-        app(MercadoPagoService::class)
-            ->cancelSubscription($this->subscription->mp_subscription_id);
+        try {
+            app(MercadoPagoService::class)
+                ->cancelSubscription($this->subscription->mp_subscription_id);
+        } catch (\Throwable $e) {
+            Log::error('Mercado Pago: error al cancelar la suscripción', [
+                'subscription_id' => $this->subscription->mp_subscription_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            Flux::toast(
+                heading: 'No se pudo cancelar',
+                text: 'Ocurrió un problema al comunicarnos con Mercado Pago. Intenta nuevamente en unos minutos.',
+                variant: 'danger',
+            );
+
+            return;
+        }
 
         app(SyncSubscription::class)->handle([
             'id' => $this->subscription->mp_subscription_id,

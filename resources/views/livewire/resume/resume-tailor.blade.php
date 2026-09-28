@@ -27,11 +27,14 @@
             </flux:subheading>
         </div>
 
-        <flux:editor wire:model.live="tailored"
-            toolbar="heading | bold italic underline | bullet ordered | align ~ undo redo"
-            placeholder="Edit your tailored CV..." class="[&_ [data-slot=content]]:min-h-[350px]!" />
+        <iframe srcdoc="{{ $previewHtml }}" title="Vista previa del CV adaptado"
+            class="w-full min-h-[500px] rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white"></iframe>
 
-        <div class="flex justify-end">
+        <div class="flex justify-end gap-2">
+            <flux:button variant="ghost" icon="arrow-path" x-on:click="$wire.startTailoring()">
+                Generar de nuevo
+            </flux:button>
+
             <flux:button variant="primary" icon="arrow-down-tray" wire:click="downloadPdf">
                 Descargar CV adaptado
             </flux:button>

@@ -63,7 +63,7 @@
                                 <div class="flex-1">
                                     <flux:heading size="sm">Plan mensual</flux:heading>
                                     <flux:text size="sm" class="mt-1">
-                                        {{ $prices['monthly']['formatted'] }} /mes
+                                        {{ $prices['monthly']['formatted'] ?? 'Precio no disponible' }} /mes
                                     </flux:text>
                                 </div>
 
@@ -87,7 +87,7 @@
                                 <div class="flex-1">
                                     <flux:heading size="sm">Plan semanal</flux:heading>
                                     <flux:text size="sm" class="mt-1">
-                                        {{ $prices['weekly']['formatted'] }} /semana
+                                        {{ $prices['weekly']['formatted'] ?? 'Precio no disponible' }} /semana
                                     </flux:text>
                                 </div>
 
@@ -111,7 +111,7 @@
                                 <div class="flex-1">
                                     <flux:heading size="sm">Plan anual</flux:heading>
                                     <flux:text size="sm" class="mt-1">
-                                        {{ $prices['yearly']['formatted'] }} /año
+                                        {{ $prices['yearly']['formatted'] ?? 'Precio no disponible' }} /año
                                     </flux:text>
                                 </div>
 

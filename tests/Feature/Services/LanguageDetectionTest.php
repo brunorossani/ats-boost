@@ -20,7 +20,9 @@ test('cv_tailor_service_respects_spanish_job_description_over_english_resume', f
         $result = $service->tailorResume($cvPath, $spanishJobDescription);
         // If the language detection works correctly, the service should detect Spanish from job description
         // and process the CV in Spanish context
-        expect($result)->toHaveKeys(['html', 'cvText', 'name']);
+        expect($result)->toHaveKeys(['cv', 'html', 'cvText']);
+        expect($result['cv'])->toHaveKeys(['lang', 'name', 'headline', 'contact', 'sections']);
+        expect($result['cv']['lang'])->toBe('es');
     } finally {
         @unlink($cvPath);
     }
@@ -42,7 +44,9 @@ test('cv_tailor_service_respects_english_job_description_over_spanish_resume', f
     try {
         $result = $service->tailorResume($cvPath, $englishJobDescription);
         // The service should detect English from job description
-        expect($result)->toHaveKeys(['html', 'cvText', 'name']);
+        expect($result)->toHaveKeys(['cv', 'html', 'cvText']);
+        expect($result['cv'])->toHaveKeys(['lang', 'name', 'headline', 'contact', 'sections']);
+        expect($result['cv']['lang'])->toBe('en');
     } finally {
         @unlink($cvPath);
     }

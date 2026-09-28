@@ -3,14 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Actions\MercadoPago\SyncSubscription;
+use App\Actions\MercadoPago\VerifyWebhookSignature;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
-    public function handle(Request $request, SyncSubscription $sync): JsonResponse
+    public function handle(Request $request, VerifyWebhookSignature $verify): JsonResponse
     {
+        if (! $verify->handle($request)) {
+            Log::warning('Mercado Pago webhook: firma inválida o ausente', [
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json(['ok' => false], 401);
+        }
+
         Log::info('Mercado Pago webhook payload', $request->all());
 
         $topic = $request->input('type')
@@ -36,6 +45,22 @@ class WebhookController extends Controller
             'topic' => $topic,
             'resource_id' => $resourceId,
         ]);
+
+        // Resuelto acá (no como parámetro tipado del método) para que un
+        // MercadoPagoService mal configurado no impida ni siquiera llegar a
+        // este punto (la verificación de firma de arriba debe poder correr
+        // siempre, sin depender de que el servicio de MercadoPago construya).
+        try {
+            $sync = app(SyncSubscription::class);
+        } catch (\Throwable $e) {
+            Log::error('Mercado Pago webhook: no se pudo sincronizar, servicio no disponible', [
+                'error' => $e->getMessage(),
+            ]);
+
+            // 503: le señala a Mercado Pago que reintente más tarde, en vez
+            // de descartar el evento silenciosamente.
+            return response()->json(['ok' => false], 503);
+        }
 
         match ($topic) {
             'subscription_preapproval' => $sync->handle([

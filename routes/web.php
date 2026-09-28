@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\TailoredResumeController;
 use App\Livewire\Settings\Subscriptions;
 use App\Livewire\Resume\ResumeAnalyzer;
 use App\Livewire\Resume\ResumeTailor;
@@ -35,10 +36,19 @@ Route::view('privacidad', 'homepages.privacy')
 Route::view('terminos', 'homepages.terms')
     ->name('terms');
 
+// Vista previa/pitch del próximo producto (búsqueda + envío automático de CVs).
+// Pública y sin autenticación a propósito: se comparte como link para mostrar
+// la dirección del producto antes de construir la integración real.
+Route::view('futuro', 'homepages.auto-apply-preview')
+    ->name('auto-apply.preview');
+
 Route::get('/checkout/start/{variant}', [CheckoutController::class, 'start'])
     ->name('checkout.start');
 
 Route::middleware(['auth'])->group(function () {
+    Route::delete('panel/cvs-tailored/{tailoredResume}', [TailoredResumeController::class, 'destroy'])
+        ->name('resume.tailored.destroy');
+
     Route::redirect('ajustes', 'ajustes/perfil');
 
     Route::get('ajustes/perfil', Profile::class)->name('profile.edit');

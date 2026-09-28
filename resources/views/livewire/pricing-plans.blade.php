@@ -8,7 +8,7 @@
             <div class="space-y-6">
                 <div class="space-y-2">
                     <flux:subheading class="!text-sm">Plan semanal</flux:subheading>
-                    <flux:heading class="!text-3xl">{{ $prices['weekly']['formatted'] }} /semana</flux:heading>
+                    <flux:heading class="!text-3xl">{{ $prices['weekly']['formatted'] ?? 'Precio no disponible' }} /semana</flux:heading>
                 </div>
 
                 <!-- Features -->
@@ -62,7 +62,7 @@
                     <flux:badge icon="fire" size="sm" color="green" class="mb-2">Más popular
                     </flux:badge>
                     <flux:subheading class="!text-sm">Plan mensual</flux:subheading>
-                    <flux:heading class="!text-3xl">{{ $prices['monthly']['formatted'] }} /mes</flux:heading>
+                    <flux:heading class="!text-3xl">{{ $prices['monthly']['formatted'] ?? 'Precio no disponible' }} /mes</flux:heading>
                 </div>
 
                 <!-- Features -->
@@ -114,7 +114,7 @@
             <div class="space-y-6">
                 <div class="space-y-2">
                     <flux:subheading class="!text-sm">Plan anual</flux:subheading>
-                    <flux:heading class="!text-3xl">{{ $prices['yearly']['formatted'] }} /año</flux:heading>
+                    <flux:heading class="!text-3xl">{{ $prices['yearly']['formatted'] ?? 'Precio no disponible' }} /año</flux:heading>
                 </div>
 
                 <!-- Features -->

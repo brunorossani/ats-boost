@@ -4,12 +4,13 @@ namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use OpenAI\Laravel\Facades\OpenAI;
 use RuntimeException;
 use Smalot\PdfParser\Parser;
 
 class AnalyzeResumeService
 {
+    public function __construct(private AnthropicService $anthropic) {}
+
     /**
      * Detecta el idioma principal del texto (español, inglés, etc.)
      */
@@ -503,12 +504,7 @@ class AnalyzeResumeService
         $language = $this->detectLanguage($cv);
         $prompt = $this->getPromptAnalyzeATS($language, $cv);
 
-        $response = OpenAI::chat()->create([
-            'model' => 'gpt-4.1',
-            'messages' => [
-                ['role' => 'user', 'content' => $prompt],
-            ],
-        ])->choices[0]->message->content ?? '0';
+        $response = $this->anthropic->complete($prompt, maxTokens: 32);
 
         return (int) filter_var($response, FILTER_SANITIZE_NUMBER_INT);
     }
@@ -520,14 +516,7 @@ class AnalyzeResumeService
     {
         $prompt = $this->getPromptImproveCV($language, $cvText);
 
-        return trim(
-            OpenAI::chat()->create([
-                'model' => 'gpt-4.1',
-                'messages' => [
-                    ['role' => 'user', 'content' => $prompt],
-                ],
-            ])->choices[0]->message->content ?? ''
-        );
+        return $this->anthropic->complete($prompt);
     }
 
     /* =========================
@@ -544,13 +533,7 @@ class AnalyzeResumeService
             $prompt = "Today is: {$currentDate}\n\nExtract the full name of the candidate. Return ONLY the name or \"Unknown\".\n\n{$cvText}";
         }
 
-        return trim(OpenAI::chat()->create([
-            'model' => 'gpt-4.1',
-            'messages' => [[
-                'role' => 'user',
-                'content' => $prompt,
-            ]],
-        ])->choices[0]->message->content);
+        return $this->anthropic->complete($prompt, maxTokens: 128);
     }
 
     private function extractContactLine(string $cvText, string $language = 'en'): string
@@ -563,13 +546,7 @@ class AnalyzeResumeService
             $prompt = "Today is: {$currentDate}\n\nExtract location, email and phone in ONE line separated by •.\n\n{$cvText}";
         }
 
-        return trim(OpenAI::chat()->create([
-            'model' => 'gpt-4.1',
-            'messages' => [[
-                'role' => 'user',
-                'content' => $prompt,
-            ]],
-        ])->choices[0]->message->content);
+        return $this->anthropic->complete($prompt, maxTokens: 128);
     }
 
     /* =========================
