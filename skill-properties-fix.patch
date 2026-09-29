@@ -1,0 +1,48 @@
+From 5fce85dced2f52eed483cfd5265dee2bfbad7a42 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 28 Sep 2026 19:47:51 +0000
+Subject: [PATCH] fix: corregir propiedades de skills en plantillas Claude
+
+Las plantillas usaban $skill->category y $skill->items, pero
+SkillGroupData define $skill->label y $skill->value.
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01L2fDxAE2DwV7RfxQcL6Ppo
+---
+ resources/views/pdf/resume/claude-photo.blade.php | 4 ++--
+ resources/views/pdf/resume/claude.blade.php       | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/resources/views/pdf/resume/claude-photo.blade.php b/resources/views/pdf/resume/claude-photo.blade.php
+index b506c9f..8be66ff 100644
+--- a/resources/views/pdf/resume/claude-photo.blade.php
++++ b/resources/views/pdf/resume/claude-photo.blade.php
+@@ -276,8 +276,8 @@
+             <div class="skills-grid">
+                 @foreach ($resume->skills as $skill)
+                     <div class="skill-row">
+-                        <span class="skill-label">{{ $skill->category }}</span>
+-                        <span class="skill-value">{{ $skill->items }}</span>
++                        <span class="skill-label">{{ $skill->label }}</span>
++                        <span class="skill-value">{{ $skill->value }}</span>
+                     </div>
+                 @endforeach
+             </div>
+diff --git a/resources/views/pdf/resume/claude.blade.php b/resources/views/pdf/resume/claude.blade.php
+index a4d156e..dfa4bb7 100644
+--- a/resources/views/pdf/resume/claude.blade.php
++++ b/resources/views/pdf/resume/claude.blade.php
+@@ -255,8 +255,8 @@
+             <div class="skills-grid">
+                 @foreach ($resume->skills as $skill)
+                     <div class="skill-row">
+-                        <span class="skill-label">{{ $skill->category }}</span>
+-                        <span class="skill-value">{{ $skill->items }}</span>
++                        <span class="skill-label">{{ $skill->label }}</span>
++                        <span class="skill-value">{{ $skill->value }}</span>
+                     </div>
+                 @endforeach
+             </div>
+-- 
+2.43.0
+

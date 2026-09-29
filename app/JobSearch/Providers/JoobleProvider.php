@@ -33,9 +33,16 @@ class JoobleProvider extends AbstractProvider
 
     public function search(JobQuery $query): array
     {
+        $apiKey = $this->config('api_key');
+
+        // La API de Jooble requiere una clave válida. Si no está configurada, lanzamos error claro.
+        if (empty($apiKey)) {
+            throw new RuntimeException('Jooble API key no está configurada en JOOBLE_API_KEY');
+        }
+
         $response = $this->ensureOk(
-            $this->http()->post('https://jooble.org/api/'.$this->config('api_key'), [
-                'keywords' => $query->keywords,
+            $this->http()->post('https://jooble.org/api/'.$apiKey, [
+                'keywords' => $query->keywords ?: '',
                 'location' => $query->locationText(),
                 'page' => '1',
                 'ResultOnPage' => (string) min(50, $query->limit),

@@ -42,7 +42,10 @@
                         </div>
                     </div>
                 @else
-                    <flux:text size="sm">Buscando por primera vez…</flux:text>
+                    <div class="flex items-center gap-2">
+                        <flux:icon.arrow-path class="size-4 animate-spin text-blue-500" />
+                        <flux:text size="sm">Buscando ofertas y generando CVs adaptados…</flux:text>
+                    </div>
                 @endif
 
                 <div class="flex gap-1">
@@ -85,9 +88,12 @@
                             <flux:button size="sm" icon="arrow-down-tray" :href="route('documents.download', $match->document_id)">PDF</flux:button>
                             <flux:button size="sm" variant="ghost" icon="pencil-square" :href="route('documents.edit', $match->document_id)" wire:navigate>Editar</flux:button>
                         @elseif ($match->isPending())
-                            <flux:badge icon="arrow-path" size="sm">
-                                {{ $match->status === 'new' ? 'En cola' : 'Adaptando tu CV…' }}
-                            </flux:badge>
+                            <div class="flex items-center gap-2">
+                                <flux:icon.arrow-path class="size-4 animate-spin text-blue-500" />
+                                <flux:text size="sm">
+                                    {{ $match->status === 'new' ? 'En cola para procesar' : 'Adaptando tu CV…' }}
+                                </flux:text>
+                            </div>
                         @elseif ($match->status === 'failed')
                             <flux:button size="sm" icon="arrow-path" wire:click="retry({{ $match->id }})">Reintentar</flux:button>
                         @elseif ($match->status === 'low_match')
@@ -175,27 +181,42 @@
     </flux:modal>
 
     {{-- Vista previa del CV --}}
-    <flux:modal name="cv-preview" variant="floating" class="w-full! max-w-3xl space-y-4 p-4">
+    <flux:modal name="cv-preview" variant="floating" class="w-full! max-w-4xl space-y-4 p-4">
         @if ($this->preview)
-            <div>
-                <flux:heading size="lg">CV adaptado para {{ $this->preview->listing->title }}</flux:heading>
-                <flux:subheading>{{ $this->preview->listing->company }} · {{ $this->preview->listing->locationLabel() }}</flux:subheading>
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                    <flux:heading size="lg">CV adaptado para {{ $this->preview->listing->title }}</flux:heading>
+                    <flux:subheading>{{ $this->preview->listing->company }} · {{ $this->preview->listing->locationLabel() }}</flux:subheading>
+                </div>
+                <div class="flex gap-2">
+                    <flux:button size="sm" variant="ghost" icon="pencil-square" :href="route('documents.edit', $this->preview->document_id)" wire:navigate>Editar</flux:button>
+                    <flux:button size="sm" variant="primary" icon="arrow-down-tray" :href="route('documents.download', $this->preview->document_id)">PDF</flux:button>
+                </div>
             </div>
 
-            <iframe src="{{ route('documents.preview', $this->preview->document_id) }}" title="CV adaptado"
-                class="w-full h-[70vh] rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white"></iframe>
+            <div class="relative rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 overflow-hidden">
+                <iframe
+                    src="{{ route('documents.preview', $this->preview->document_id) }}"
+                    title="CV adaptado"
+                    class="w-full h-[75vh] bg-white dark:bg-zinc-800"
+                    loading="lazy"
+                ></iframe>
+                <div class="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-zinc-100/50 to-transparent dark:from-zinc-900/50 pointer-events-none"></div>
+            </div>
 
-            <div class="flex flex-wrap justify-end gap-2">
-                @if ($this->preview->listing->safeUrl())
-                    <flux:button variant="ghost" icon-trailing="arrow-top-right-on-square" :href="$this->preview->listing->safeUrl()" target="_blank" rel="noopener noreferrer">
-                        Ir a postularme
-                    </flux:button>
-                @endif
-                @if ($this->preview->status === 'ready')
-                    <flux:button icon="check" wire:click="markApplied({{ $this->preview->id }})">Me postulé</flux:button>
-                @endif
-                <flux:button icon="pencil-square" :href="route('documents.edit', $this->preview->document_id)" wire:navigate>Editar</flux:button>
-                <flux:button variant="primary" icon="arrow-down-tray" :href="route('documents.download', $this->preview->document_id)">Descargar PDF</flux:button>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <div class="flex gap-2">
+                    @if ($this->preview->listing->safeUrl())
+                        <flux:button icon-trailing="arrow-top-right-on-square" :href="$this->preview->listing->safeUrl()" target="_blank" rel="noopener noreferrer">
+                            Ver oferta original
+                        </flux:button>
+                    @endif
+                </div>
+                <div class="flex gap-2">
+                    @if ($this->preview->status === 'ready')
+                        <flux:button variant="primary" icon="check" wire:click="markApplied({{ $this->preview->id }})">Marcar como postulado</flux:button>
+                    @endif
+                </div>
             </div>
         @endif
     </flux:modal>

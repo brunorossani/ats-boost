@@ -9,6 +9,7 @@ return [
         'projects' => 'Projects',
         'skills' => 'Skills',
         'certifications' => 'Certifications',
+        'languages' => 'Languages',
     ],
 
     'ats' => [

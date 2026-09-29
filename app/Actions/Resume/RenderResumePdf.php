@@ -15,7 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
  */
 class RenderResumePdf
 {
-    public function handle(ResumeData $resume, ResumeTemplate $template = ResumeTemplate::Modern): string
+    public function handle(ResumeData $resume, ResumeTemplate $template = ResumeTemplate::Claude): string
     {
         return Pdf::loadView($template->view(), [
             'resume' => $resume,

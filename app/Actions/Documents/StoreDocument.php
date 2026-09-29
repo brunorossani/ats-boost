@@ -27,7 +27,7 @@ class StoreDocument
         ?string $jobDescription = null,
         ?string $sourceFilename = null,
         ?AtsReportData $report = null,
-        ResumeTemplate $template = ResumeTemplate::Modern,
+        ResumeTemplate $template = ResumeTemplate::Claude,
         ?Document $existing = null,
     ): Document {
         $attributes = [

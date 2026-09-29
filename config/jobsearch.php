@@ -48,11 +48,24 @@ return [
             'pages' => 3,
         ],
         'ats' => [
-            // Empresas a monitorear directo desde su página de empleos, por ejemplo:
-            // ['ats' => 'greenhouse', 'slug' => 'gitlab', 'name' => 'GitLab'],
-            // ['ats' => 'lever', 'slug' => 'nombre-en-lever', 'name' => 'Empresa'],
-            // ['ats' => 'ashby', 'slug' => 'nombre-en-ashby', 'name' => 'Empresa'],
-            'companies' => [],
+            // Empresas a monitorear directo desde su página de empleos.
+            // Para encontrar el slug de una empresa:
+            //   - Greenhouse: https://boards.greenhouse.io/{slug}
+            //   - Lever: https://jobs.lever.co/{slug}
+            //   - Ashby: https://jobs.ashbyhq.com/{slug}
+            //
+            // Ejemplos de empresas tech populares (descomenta las que te interesen):
+            'companies' => [
+                // ['ats' => 'greenhouse', 'slug' => 'gitlab', 'name' => 'GitLab'],
+                // ['ats' => 'greenhouse', 'slug' => 'auth0', 'name' => 'Auth0'],
+                // ['ats' => 'greenhouse', 'slug' => 'datadog', 'name' => 'Datadog'],
+                // ['ats' => 'greenhouse', 'slug' => 'mozilla', 'name' => 'Mozilla'],
+                // ['ats' => 'lever', 'slug' => 'netflix', 'name' => 'Netflix'],
+                // ['ats' => 'lever', 'slug' => 'shopify', 'name' => 'Shopify'],
+                // ['ats' => 'lever', 'slug' => 'ubuntu', 'name' => 'Canonical (Ubuntu)'],
+                // ['ats' => 'ashby', 'slug' => 'ramp', 'name' => 'Ramp'],
+                // ['ats' => 'ashby', 'slug' => 'deel', 'name' => 'Deel'],
+            ],
         ],
     ],
 
