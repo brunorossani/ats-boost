@@ -115,16 +115,36 @@
                                     <flux:text size="sm" class="whitespace-pre-line">{{ $this->emailDraft['body'] }}</flux:text>
                                 </div>
                             </div>
-                            <flux:button
-                                size="xs"
-                                variant="ghost"
-                                x-data
-                                x-on:click="navigator.clipboard.writeText('{{ addslashes($this->emailDraft['subject'] . '\n\n' . $this->emailDraft['body']) }}')"
-                            >
-                                Copiar borrador
-                            </flux:button>
+                            <div class="flex flex-wrap gap-2">
+                                @php
+                                    $mailtoLink = 'mailto:' . $method['email']
+                                        . '?subject=' . rawurlencode($this->emailDraft['subject'])
+                                        . '&body=' . rawurlencode($this->emailDraft['body']);
+                                @endphp
+                                <flux:button size="sm" variant="primary" icon="envelope" :href="$mailtoLink">
+                                    Abrir en mi correo
+                                </flux:button>
+                                <flux:button
+                                    size="xs"
+                                    variant="ghost"
+                                    x-data
+                                    x-on:click="navigator.clipboard.writeText('{{ addslashes($this->emailDraft['subject'] . '\n\n' . $this->emailDraft['body']) }}')"
+                                >
+                                    Copiar borrador
+                                </flux:button>
+                            </div>
                         </div>
                     @endif
+
+                    {{-- Cover letter option --}}
+                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                        <flux:text size="sm" class="text-zinc-600 dark:text-zinc-400 mb-2">
+                            ¿Necesitás una carta de presentación?
+                        </flux:text>
+                        <flux:button size="sm" variant="ghost" icon="document-plus" wire:click="generateCoverLetter">
+                            Generar carta de presentación
+                        </flux:button>
+                    </div>
                 </div>
             @elseif ($method['method'] === 'linkedin')
                 <div class="space-y-2">

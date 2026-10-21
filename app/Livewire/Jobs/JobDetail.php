@@ -4,6 +4,8 @@ namespace App\Livewire\Jobs;
 
 use App\Actions\Jobs\DetectApplicationMethod;
 use App\Actions\Jobs\GenerateApplicationEmail;
+use App\Actions\Jobs\GenerateCoverLetterForMatch;
+use App\Livewire\Concerns\HandlesGenerationFailures;
 use App\Models\JobMatch;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -18,6 +20,8 @@ use Livewire\Component;
  */
 class JobDetail extends Component
 {
+    use HandlesGenerationFailures;
+
     public int $matchId;
 
     #[Computed]
@@ -83,6 +87,22 @@ class JobDetail extends Component
         $this->match?->update(['status' => JobMatch::STATUS_DISMISSED]);
         $this->dispatch('match-dismissed', $this->matchId);
         $this->close();
+    }
+
+    public function generateCoverLetter(GenerateCoverLetterForMatch $generate): void
+    {
+        if (! $this->match) {
+            return;
+        }
+
+        $document = $this->attempt(fn () => $generate->handle($this->match));
+
+        if ($document === null) {
+            return;
+        }
+
+        $this->succeeded('Carta de presentación generada', 'Podés editarla antes de enviarla.');
+        $this->redirect(route('documents.edit', $document), navigate: true);
     }
 
     public function render()
