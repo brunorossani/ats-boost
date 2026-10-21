@@ -26,10 +26,9 @@
                 @if ($listing->employment_type)
                     <flux:badge size="sm">{{ $listing->employment_type }}</flux:badge>
                 @endif
-                @if ($listing->salary_min || $listing->salary_max)
+                @if ($listing->salaryLabel())
                     <flux:badge size="sm" color="green">
-                        {{ $listing->salary_currency }}
-                        {{ collect([$listing->salary_min, $listing->salary_max])->filter()->map(fn ($v) => number_format((float) $v, 0, ',', '.'))->implode(' – ') }}
+                        {{ $listing->salaryLabel() }}
                     </flux:badge>
                 @endif
             </div>

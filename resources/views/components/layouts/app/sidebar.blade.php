@@ -15,36 +15,23 @@
         </a>
 
         <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Plataforma')" class="grid">
-                <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                    wire:navigate>{{ __('Panel de control') }}</flux:navlist.item>
-                <flux:navlist.item icon="briefcase" :href="route('jobs.feed')" :current="request()->routeIs('jobs.feed')"
-                    wire:navigate>{{ __('Mis ofertas') }}</flux:navlist.item>
-            </flux:navlist.group>
-        </flux:navlist>
-
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Currículum')" class="grid">
-                <flux:navlist.item icon="sparkles" :href="route('resume.tailor')"
-                    :current="request()->routeIs('resume.tailor')" wire:navigate>
-                    {{ __('Adaptar') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="chart-bar" :href="route('resume.analyzer')"
-                    :current="request()->routeIs('resume.analyzer')" wire:navigate>
-                    {{ __('Analizar') }}
-                </flux:navlist.item>
-                <flux:navlist.item icon="envelope-open" :href="route('resume.cover-letter')"
-                    :current="request()->routeIs('resume.cover-letter')" wire:navigate>
-                    {{ __('Carta de presentación') }}
+            <flux:navlist.group class="grid">
+                <flux:navlist.item icon="briefcase" :href="route('jobs.feed')" :current="request()->routeIs('jobs.*')"
+                    wire:navigate>{{ __('Ofertas') }}</flux:navlist.item>
+                <flux:navlist.item icon="clipboard-document-check" :href="route('applications.index')" :current="request()->routeIs('applications.*')"
+                    wire:navigate>{{ __('Postulaciones') }}</flux:navlist.item>
+                <flux:navlist.item icon="document-text" :href="route('resume.base')"
+                    :current="request()->routeIs('resume.base') || request()->routeIs('documents.*')" wire:navigate>
+                    {{ __('Mi CV') }}
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 
         <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Biblioteca')" class="grid">
-                <flux:navlist.item icon="document-text" :href="route('documents.index')"
-                    :current="request()->routeIs('documents.*')" wire:navigate>
-                    {{ __('Mis documentos') }}
+            <flux:navlist.group class="grid">
+                <flux:navlist.item icon="cog" :href="route('profile.edit')"
+                    :current="request()->routeIs('profile.*') || request()->routeIs('subscriptions.*') || request()->routeIs('appearance.*')" wire:navigate>
+                    {{ __('Ajustes') }}
                 </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>

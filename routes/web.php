@@ -17,17 +17,17 @@ use Laravel\Fortify\Features;
 
 // Home = demo en vivo: ofertas reales del día por país, cada una con su CV adaptado.
 Route::view('/', 'homepages.home')->name('home');
-Route::redirect('futuro', '/', 301);
 
-// Demo anterior: pegar una oferta puntual y adaptar el CV.
-Route::view('adaptar', 'homepages.welcome')->name('demo.tailor');
+// Redirecciones de páginas consolidadas en home
+Route::redirect('futuro', '/', 301);
+Route::redirect('adaptar', '/#como-funciona', 301);
+Route::redirect('caracteristicas', '/#caracteristicas', 301);
 
 Route::get('demo/cv/{document}/{disposition?}', [DocumentController::class, 'demo'])
     ->whereIn('disposition', ['inline', 'attachment'])
     ->middleware('throttle:30,1')
     ->name('demo.document');
 
-Route::view('caracteristicas', 'homepages.features')->name('features');
 Route::view('precios', 'homepages.pricing')->name('pricing');
 Route::view('privacidad', 'homepages.privacy')->name('privacy');
 Route::view('terminos', 'homepages.terms')->name('terms');
@@ -65,10 +65,16 @@ Route::middleware('auth')->group(function (): void {
 */
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::view('panel', 'dashboard')->name('dashboard');
+    // Panel redirige a Ofertas (el flujo arranca ahí)
+    Route::redirect('panel', 'panel/ofertas')->name('dashboard');
 
     Route::middleware('subscribed')->group(function (): void {
+        // Navegación principal
         Route::get('panel/ofertas', Jobs\JobFeed::class)->name('jobs.feed');
+        Route::get('panel/postulaciones', \App\Livewire\Applications\Index::class)->name('applications.index');
+        Route::get('panel/mi-cv', Resume\BaseResume::class)->name('resume.base');
+
+        // Herramientas accesibles desde el flujo (mantener rutas para no romper links)
         Route::get('panel/adaptar-cv', Resume\Tailor::class)->name('resume.tailor');
         Route::get('panel/analizar-cv', Resume\Analyzer::class)->name('resume.analyzer');
         Route::get('panel/carta-presentacion', Resume\CoverLetter::class)->name('resume.cover-letter');

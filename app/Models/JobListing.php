@@ -23,6 +23,10 @@ class JobListing extends Model
         'salary_min',
         'salary_max',
         'salary_currency',
+        'salary_period',
+        'salary_min_usd_month',
+        'salary_max_usd_month',
+        'salary_is_estimated',
         'description',
         'url',
         'posted_at',
@@ -34,6 +38,9 @@ class JobListing extends Model
             'is_remote' => 'boolean',
             'salary_min' => 'decimal:2',
             'salary_max' => 'decimal:2',
+            'salary_min_usd_month' => 'decimal:2',
+            'salary_max_usd_month' => 'decimal:2',
+            'salary_is_estimated' => 'boolean',
             'posted_at' => 'datetime',
         ];
     }
@@ -94,6 +101,51 @@ class JobListing extends Model
         }
 
         return $place ?: 'Ubicación no informada';
+    }
+
+    /**
+     * Etiqueta de salario para mostrar en UI: original + normalizado si está disponible.
+     */
+    public function salaryLabel(): ?string
+    {
+        if (! $this->salary_min && ! $this->salary_max) {
+            return null;
+        }
+
+        $parts = [];
+
+        // Salario original
+        $original = collect([$this->salary_min, $this->salary_max])
+            ->filter()
+            ->map(fn ($v) => number_format((float) $v, 0, ',', '.'))
+            ->implode(' – ');
+
+        if ($original) {
+            $parts[] = ($this->salary_currency ?: '') . ' ' . $original;
+            if ($this->salary_period) {
+                $parts[0] .= '/' . match ($this->salary_period) {
+                    'hour' => 'hora',
+                    'day' => 'día',
+                    'month' => 'mes',
+                    'year' => 'año',
+                    default => $this->salary_period,
+                };
+            }
+        }
+
+        // Normalizado (solo si existe y es diferente de original)
+        if ($this->salary_min_usd_month || $this->salary_max_usd_month) {
+            $normalized = collect([$this->salary_min_usd_month, $this->salary_max_usd_month])
+                ->filter()
+                ->map(fn ($v) => number_format((float) $v, 0, ',', '.'))
+                ->implode(' – ');
+
+            if ($normalized && $this->salary_currency !== 'USD') {
+                $parts[] = "≈ USD {$normalized}/mes";
+            }
+        }
+
+        return implode(' · ', $parts);
     }
 
     /**

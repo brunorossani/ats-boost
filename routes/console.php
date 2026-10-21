@@ -109,3 +109,7 @@ Schedule::command('jobs:sync')
     ->cron(config('jobsearch.sync_cron'))
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('exchange-rates:update')
+    ->daily()
+    ->onOneServer();

@@ -1,78 +1,49 @@
 <div class="space-y-8" @if ($this->hasPending) wire:poll.10s @endif>
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <flux:heading size="xl" level="1">Mis ofertas</flux:heading>
+            <flux:heading size="xl" level="1">Ofertas</flux:heading>
             <flux:subheading size="lg">
-                Buscamos ofertas nuevas dos veces por día y generamos un CV adaptado para cada una que encaje con tu perfil.
+                Ofertas nuevas de hoy, filtradas por compatibilidad. Elegí las mejores y generá tu CV adaptado.
             </flux:subheading>
         </div>
-
-        <flux:button variant="primary" icon="plus" wire:click="newProfile">Nueva búsqueda</flux:button>
     </div>
 
-    {{-- Búsquedas --}}
-    <div class="grid gap-4 md:grid-cols-3">
-        @forelse ($this->profiles as $profile)
-            <flux:card class="space-y-3" wire:key="profile-{{ $profile->id }}">
-                <div>
-                    <flux:heading>{{ $profile->keywords }}</flux:heading>
-                    <flux:text>
-                        {{ $profile->label() }}{{ $profile->country_code && $profile->include_remote ? ' + remoto' : '' }}
-                        · últimos {{ $profile->max_age_days }} {{ $profile->max_age_days === 1 ? 'día' : 'días' }}
-                    </flux:text>
-                    <flux:text size="sm" class="mt-1">
-                        CV base: {{ $profile->resume_filename ?? 'sin CV' }}
-                    </flux:text>
-                </div>
-
-                @if ($profile->last_synced_at)
-                    <div class="space-y-1">
-                        <flux:text size="sm">
-                            Última búsqueda {{ $profile->last_synced_at->diffForHumans() }}:
-                            {{ $profile->last_sync_report['found'] ?? 0 }} ofertas, {{ $profile->last_sync_report['new_matches'] ?? 0 }} nuevas.
-                        </flux:text>
-                        <div class="flex flex-wrap gap-1">
-                            @foreach ($profile->last_sync_report['providers'] ?? [] as $provider)
-                                <flux:tooltip :content="$provider['error'] ?? match ($provider['status']) { 'ok' => $provider['found'].' ofertas', 'not_configured' => 'Sin API key configurada', default => $provider['status'] }">
-                                    <flux:badge size="sm" :color="match ($provider['status']) { 'ok' => 'green', 'error' => 'red', default => 'zinc' }">
-                                        {{ $provider['label'] }}
-                                    </flux:badge>
-                                </flux:tooltip>
-                            @endforeach
-                        </div>
+    {{-- Búsquedas como chips compactos --}}
+    @if ($this->profiles->isNotEmpty())
+        <div class="flex flex-wrap items-center gap-2">
+            @foreach ($this->profiles as $profile)
+                <flux:badge size="lg" color="zinc" wire:key="profile-chip-{{ $profile->id }}" class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5">
+                        <span>{{ $profile->keywords }}</span>
+                        <span class="text-zinc-400">·</span>
+                        <span class="text-zinc-500">{{ $profile->label() }}</span>
+                        @if ($profile->last_synced_at)
+                            <flux:tooltip content="Última búsqueda {{ $profile->last_synced_at->diffForHumans() }}">
+                                <flux:icon.clock class="size-3.5 text-zinc-400" />
+                            </flux:tooltip>
+                        @endif
                     </div>
-                @else
-                    <div class="flex items-center gap-2">
-                        <flux:icon.arrow-path class="size-4 animate-spin text-blue-500" />
-                        <flux:text size="sm">Buscando ofertas y generando CVs adaptados…</flux:text>
-                    </div>
-                @endif
-
-                <div class="flex gap-1">
-                    <flux:button size="sm" icon="arrow-path" wire:click="syncNow({{ $profile->id }})">Buscar ahora</flux:button>
-                    <flux:spacer />
-                    <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="editProfile({{ $profile->id }})" aria-label="Editar" />
-                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="deleteProfile({{ $profile->id }})"
-                        wire:confirm="¿Eliminar esta búsqueda y sus ofertas?" aria-label="Eliminar" />
-                </div>
-            </flux:card>
-        @empty
-            <flux:card class="md:col-span-3 space-y-3">
-                <flux:heading>Configurá tu primera búsqueda</flux:heading>
-                <flux:subheading>
-                    Subí tu CV, decinos qué puesto buscás y dónde. Elegimos los portales de esa región
-                    (LatAm, Norteamérica, Europa…) y te traemos las ofertas de los últimos días con un CV adaptado a cada una.
-                </flux:subheading>
-                <div><flux:button variant="primary" icon="plus" wire:click="newProfile">Crear búsqueda</flux:button></div>
-            </flux:card>
-        @endforelse
-    </div>
+                    <flux:button size="xs" variant="ghost" icon="pencil" wire:click="editProfile({{ $profile->id }})" aria-label="Editar búsqueda" />
+                </flux:badge>
+            @endforeach
+            <flux:button size="sm" variant="ghost" icon="plus" wire:click="newProfile">Nueva búsqueda</flux:button>
+        </div>
+    @else
+        <flux:card class="space-y-3">
+            <flux:heading>Configurá tu primera búsqueda</flux:heading>
+            <flux:subheading>
+                Subí tu CV, decinos qué puesto buscás y dónde. Buscamos ofertas nuevas dos veces por día
+                en los portales de esa región y te mostramos las más compatibles.
+            </flux:subheading>
+            <div><flux:button variant="primary" icon="plus" wire:click="newProfile">Crear búsqueda</flux:button></div>
+        </flux:card>
+    @endif
 
     {{-- Ofertas --}}
     @if ($this->profiles->isNotEmpty())
         <div class="space-y-4">
             <div class="flex flex-wrap gap-2">
-                @foreach (['ready' => 'Listas', 'processing' => 'En proceso', 'applied' => 'Postuladas', 'low' => 'Baja compatibilidad'] as $key => $label)
+                @foreach (['all' => 'Todas', 'saved' => 'Guardadas', 'applied' => 'Postuladas'] as $key => $label)
                     <flux:button size="sm" wire:click="setTab('{{ $key }}')" :variant="$tab === $key ? 'primary' : 'ghost'">
                         {{ $label }}
                         <flux:badge size="sm" class="ms-1">{{ $this->counts[$key] }}</flux:badge>
@@ -103,6 +74,17 @@
                         @if ($match->status === 'ready')
                             <flux:button size="sm" variant="ghost" icon="check" wire:click="markApplied({{ $match->id }})">Me postulé</flux:button>
                         @endif
+
+                        @if ($match->saved_at)
+                            <flux:button size="sm" variant="ghost" icon="bookmark-slash" wire:click="unsave({{ $match->id }})" aria-label="Quitar de guardadas">
+                                Guardada
+                            </flux:button>
+                        @else
+                            <flux:button size="sm" variant="ghost" icon="bookmark" wire:click="save({{ $match->id }})" aria-label="Guardar">
+                                Guardar
+                            </flux:button>
+                        @endif
+
                         @if (! in_array($match->status, ['applied', 'processing'], true))
                             <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="dismiss({{ $match->id }})">Descartar</flux:button>
                         @endif
@@ -111,10 +93,15 @@
                     <flux:card>
                         <flux:subheading>
                             @switch($tab)
-                                @case('ready') Todavía no hay CVs adaptados. Si acabás de crear la búsqueda, aparecen en unos minutos. @break
-                                @case('processing') No hay ofertas en proceso. @break
+                                @case('all')
+                                    @if ($this->profiles->isEmpty())
+                                        Creá tu primera búsqueda para empezar a ver ofertas.
+                                    @else
+                                        No hay ofertas nuevas. Las búsquedas se actualizan automáticamente dos veces por día.
+                                    @endif
+                                    @break
+                                @case('saved') No guardaste ninguna oferta todavía. @break
                                 @case('applied') Todavía no marcaste postulaciones. @break
-                                @default Ninguna oferta quedó por debajo del mínimo de compatibilidad.
                             @endswitch
                         </flux:subheading>
                     </flux:card>

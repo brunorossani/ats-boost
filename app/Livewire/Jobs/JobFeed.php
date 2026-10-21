@@ -25,14 +25,52 @@ class JobFeed extends Component
     private const MAX_PROFILES = 3;
 
     private const TABS = [
-        'ready' => [JobMatch::STATUS_READY],
-        'processing' => [JobMatch::STATUS_NEW, JobMatch::STATUS_PROCESSING, JobMatch::STATUS_FAILED],
+        'all' => [
+            JobMatch::STATUS_NEW,
+            JobMatch::STATUS_PROCESSING,
+            JobMatch::STATUS_READY,
+            JobMatch::STATUS_FAILED,
+            JobMatch::STATUS_LOW_MATCH,
+        ],
+        'saved' => [], // filtro especial por saved_at
         'applied' => [JobMatch::STATUS_APPLIED],
-        'low' => [JobMatch::STATUS_LOW_MATCH],
     ];
 
     #[Url]
-    public string $tab = 'ready';
+    public string $tab = 'all';
+
+    #[Url]
+    public string $sort = 'recent'; // recent|salary|match|recommended
+
+    #[Url]
+    public ?int $postedWithin = null; // 1|3|7|30 días
+
+    #[Url]
+    public ?string $modality = null; // remote|hybrid|onsite
+
+    #[Url]
+    public ?string $employmentType = null;
+
+    #[Url]
+    public ?int $minSalary = null;
+
+    #[Url]
+    public bool $onlyWithSalary = false;
+
+    #[Url]
+    public ?int $minMatch = null; // 50|70|80
+
+    #[Url]
+    public bool $onlyWithCv = false;
+
+    #[Url]
+    public ?int $profileFilter = null;
+
+    #[Url]
+    public ?string $sourceFilter = null;
+
+    #[Url]
+    public string $search = '';
 
     public ?int $previewId = null;
 
@@ -62,28 +100,111 @@ class JobFeed extends Component
     #[Computed]
     public function counts(): array
     {
-        $byStatus = Auth::user()->jobMatches()
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $user = Auth::user();
 
-        return collect(self::TABS)
-            ->map(fn (array $statuses) => (int) collect($statuses)->sum(fn ($s) => $byStatus[$s] ?? 0))
-            ->all();
+        return [
+            'all' => $user->jobMatches()->where('status', '!=', JobMatch::STATUS_DISMISSED)->count(),
+            'saved' => $user->jobMatches()->whereNotNull('saved_at')->count(),
+            'applied' => $user->jobMatches()->where('status', JobMatch::STATUS_APPLIED)->count(),
+        ];
     }
 
     #[Computed]
     public function matches(): Collection
     {
-        return Auth::user()->jobMatches()
-            ->whereIn('job_matches.status', self::TABS[$this->tab] ?? self::TABS['ready'])
+        $query = Auth::user()->jobMatches()
             ->with(['listing', 'profile'])
-            ->join('job_listings', 'job_listings.id', '=', 'job_matches.job_listing_id')
-            ->orderByDesc('job_listings.posted_at')
-            ->orderByDesc('job_matches.id')
+            ->join('job_listings', 'job_listings.id', '=', 'job_matches.job_listing_id');
+
+        // Filtrar por tab
+        if ($this->tab === 'saved') {
+            $query->whereNotNull('job_matches.saved_at');
+        } elseif ($this->tab === 'applied') {
+            $query->where('job_matches.status', JobMatch::STATUS_APPLIED);
+        } else {
+            // 'all': excluir solo dismissed
+            $query->where('job_matches.status', '!=', JobMatch::STATUS_DISMISSED);
+        }
+
+        // Filtros
+        if ($this->postedWithin) {
+            $query->where('job_listings.posted_at', '>=', now()->subDays($this->postedWithin));
+        }
+
+        if ($this->modality === 'remote') {
+            $query->where('job_listings.is_remote', true);
+        } elseif ($this->modality === 'onsite') {
+            $query->where('job_listings.is_remote', false);
+        }
+
+        if ($this->employmentType) {
+            $query->where('job_listings.employment_type', $this->employmentType);
+        }
+
+        if ($this->minSalary) {
+            $query->where(function ($q) {
+                $q->where('job_listings.salary_max_usd_month', '>=', $this->minSalary)
+                    ->orWhere('job_listings.salary_min_usd_month', '>=', $this->minSalary);
+            });
+        }
+
+        if ($this->onlyWithSalary) {
+            $query->where(function ($q) {
+                $q->whereNotNull('job_listings.salary_min_usd_month')
+                    ->orWhereNotNull('job_listings.salary_max_usd_month');
+            });
+        }
+
+        if ($this->minMatch) {
+            $query->where('job_matches.match_score', '>=', $this->minMatch);
+        }
+
+        if ($this->onlyWithCv) {
+            $query->whereNotNull('job_matches.document_id');
+        }
+
+        if ($this->profileFilter) {
+            $query->where('job_matches.job_search_profile_id', $this->profileFilter);
+        }
+
+        if ($this->sourceFilter) {
+            $query->where('job_listings.source', $this->sourceFilter);
+        }
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $term = '%' . $this->search . '%';
+                $q->where('job_listings.title', 'like', $term)
+                    ->orWhere('job_listings.company', 'like', $term)
+                    ->orWhere('job_listings.location', 'like', $term);
+            });
+        }
+
+        // Ordenar
+        $query = $this->applySorting($query);
+
+        return $query
             ->select('job_matches.*')
             ->limit(100)
             ->get();
+    }
+
+    private function applySorting($query)
+    {
+        return match ($this->sort) {
+            'salary' => $query
+                ->orderByRaw('COALESCE(job_listings.salary_max_usd_month, job_listings.salary_min_usd_month) DESC NULLS LAST')
+                ->orderByDesc('job_matches.id'),
+            'match' => $query
+                ->orderByDesc('job_matches.match_score')
+                ->orderByDesc('job_matches.id'),
+            'recommended' => $query
+                ->orderByRaw('(COALESCE(job_matches.match_score, 0) * 0.6 + DATEDIFF(NOW(), job_listings.posted_at) * -0.4) DESC')
+                ->orderByDesc('job_matches.id'),
+            default => $query // 'recent'
+                ->orderByDesc('job_listings.posted_at')
+                ->orderByDesc('job_matches.id'),
+        };
     }
 
     #[Computed]
@@ -100,6 +221,26 @@ class JobFeed extends Component
             ->exists();
     }
 
+    #[Computed]
+    public function newCount(): int
+    {
+        return Auth::user()->jobMatches()
+            ->where('status', '!=', JobMatch::STATUS_DISMISSED)
+            ->whereNull('seen_at')
+            ->count();
+    }
+
+    public function markAllAsSeen(): void
+    {
+        Auth::user()->jobMatches()
+            ->whereNull('seen_at')
+            ->update(['seen_at' => now()]);
+
+        Auth::user()->update(['last_feed_visit_at' => now()]);
+
+        unset($this->newCount);
+    }
+
     public function countries(): array
     {
         return Regions::all();
@@ -107,7 +248,7 @@ class JobFeed extends Component
 
     public function setTab(string $tab): void
     {
-        $this->tab = array_key_exists($tab, self::TABS) ? $tab : 'ready';
+        $this->tab = array_key_exists($tab, self::TABS) ? $tab : 'all';
     }
 
     public function newProfile(): void
@@ -222,7 +363,15 @@ class JobFeed extends Component
 
     public function showCv(int $matchId): void
     {
-        if ($this->findMatch($matchId)?->hasCv()) {
+        $match = $this->findMatch($matchId);
+
+        if ($match?->hasCv()) {
+            // Marcar como visto al abrir
+            if (! $match->seen_at) {
+                $match->update(['seen_at' => now()]);
+                unset($this->newCount);
+            }
+
             $this->previewId = $matchId;
             $this->modal('cv-preview')->show();
         }
@@ -232,6 +381,18 @@ class JobFeed extends Component
     {
         $this->findMatch($matchId)?->update(['status' => JobMatch::STATUS_APPLIED, 'applied_at' => now()]);
         $this->modal('cv-preview')->close();
+        unset($this->matches, $this->counts);
+    }
+
+    public function save(int $matchId): void
+    {
+        $this->findMatch($matchId)?->update(['saved_at' => now()]);
+        unset($this->matches, $this->counts);
+    }
+
+    public function unsave(int $matchId): void
+    {
+        $this->findMatch($matchId)?->update(['saved_at' => null]);
         unset($this->matches, $this->counts);
     }
 
@@ -254,7 +415,23 @@ class JobFeed extends Component
         ProcessJobMatch::dispatch($match->id, force: $force);
 
         unset($this->matches, $this->counts);
-        $this->succeeded('Generando CV adaptado', 'Lo vas a ver en la pestaña "Listas".');
+        $this->succeeded('Generando CV adaptado', 'Vas a verlo cuando esté listo.');
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset([
+            'postedWithin',
+            'modality',
+            'employmentType',
+            'minSalary',
+            'onlyWithSalary',
+            'minMatch',
+            'onlyWithCv',
+            'profileFilter',
+            'sourceFilter',
+            'search',
+        ]);
     }
 
     private function findProfile(?int $id): JobSearchProfile
