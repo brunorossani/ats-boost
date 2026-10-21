@@ -72,6 +72,9 @@ class JobFeed extends Component
     #[Url]
     public string $search = '';
 
+    #[Url]
+    public ?int $oferta = null;
+
     public ?int $previewId = null;
 
     public ?int $editingId = null;
@@ -399,6 +402,21 @@ class JobFeed extends Component
     public function dismiss(int $matchId): void
     {
         $this->findMatch($matchId)?->update(['status' => JobMatch::STATUS_DISMISSED]);
+        unset($this->matches, $this->counts);
+    }
+
+    public function openDetail(int $matchId): void
+    {
+        $this->oferta = $matchId;
+    }
+
+    public function closeDetail(): void
+    {
+        $this->oferta = null;
+    }
+
+    public function onMatchDismissed(int $matchId): void
+    {
         unset($this->matches, $this->counts);
     }
 
