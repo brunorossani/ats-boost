@@ -28,12 +28,16 @@ class JobMatch extends Model
     protected $fillable = [
         'user_id',
         'job_listing_id',
+        'job_search_profile_id',
         'document_id',
         'status',
         'match_score',
         'match_details',
         'error',
         'applied_at',
+        'application_notes',
+        'seen_at',
+        'saved_at',
     ];
 
     protected function casts(): array
@@ -41,6 +45,8 @@ class JobMatch extends Model
         return [
             'match_details' => 'array',
             'applied_at' => 'datetime',
+            'seen_at' => 'datetime',
+            'saved_at' => 'datetime',
         ];
     }
 
