@@ -82,12 +82,69 @@
             </div>
         @endif
 
-        {{-- Cómo postularse (placeholder para Fase 3) --}}
+        {{-- Cómo postularse --}}
         <div>
             <flux:heading size="sm" class="mb-2">Cómo te postulás</flux:heading>
-            <flux:text size="sm" class="text-zinc-500">
-                Próximamente: detección automática del método de postulación y asistencia paso a paso.
-            </flux:text>
+
+            @php($method = $this->applicationMethod)
+
+            @if ($method['method'] === 'email')
+                <div class="space-y-3">
+                    <flux:text>{{ $method['instructions'] }}</flux:text>
+
+                    {{-- Email address --}}
+                    <div class="flex items-center gap-2 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800">
+                        <flux:icon.envelope class="size-5 text-zinc-500" />
+                        <flux:text class="font-mono">{{ $method['email'] }}</flux:text>
+                        <flux:button size="xs" variant="ghost" x-data x-on:click="navigator.clipboard.writeText('{{ $method['email'] }}')">
+                            Copiar
+                        </flux:button>
+                    </div>
+
+                    {{-- Email draft --}}
+                    @if ($this->emailDraft)
+                        <div class="space-y-2">
+                            <flux:text size="sm" class="font-medium">Borrador de email:</flux:text>
+                            <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 space-y-2 text-sm">
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500">Asunto:</flux:text>
+                                    <flux:text size="sm" class="font-medium">{{ $this->emailDraft['subject'] }}</flux:text>
+                                </div>
+                                <div>
+                                    <flux:text size="xs" class="text-zinc-500">Mensaje:</flux:text>
+                                    <flux:text size="sm" class="whitespace-pre-line">{{ $this->emailDraft['body'] }}</flux:text>
+                                </div>
+                            </div>
+                            <flux:button
+                                size="xs"
+                                variant="ghost"
+                                x-data
+                                x-on:click="navigator.clipboard.writeText('{{ addslashes($this->emailDraft['subject'] . '\n\n' . $this->emailDraft['body']) }}')"
+                            >
+                                Copiar borrador
+                            </flux:button>
+                        </div>
+                    @endif
+                </div>
+            @elseif ($method['method'] === 'linkedin')
+                <div class="space-y-2">
+                    <flux:text>{{ $method['instructions'] }}</flux:text>
+                    <flux:button size="sm" icon-trailing="arrow-top-right-on-square" :href="$method['url']" target="_blank">
+                        Abrir en LinkedIn
+                    </flux:button>
+                </div>
+            @elseif ($method['method'] === 'portal' && $method['url'])
+                <div class="space-y-2">
+                    <flux:text>{{ $method['instructions'] }}</flux:text>
+                    <flux:button size="sm" icon-trailing="arrow-top-right-on-square" :href="$method['url']" target="_blank">
+                        Ir al portal
+                    </flux:button>
+                </div>
+            @else
+                <flux:text class="text-zinc-500">
+                    El método de postulación no está claro en la oferta. Revisá la descripción completa para encontrar instrucciones.
+                </flux:text>
+            @endif
         </div>
 
         {{-- Descripción --}}

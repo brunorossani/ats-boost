@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Jobs;
 
+use App\Actions\Jobs\DetectApplicationMethod;
+use App\Actions\Jobs\GenerateApplicationEmail;
 use App\Models\JobMatch;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -31,6 +33,32 @@ class JobDetail extends Component
         }
 
         return $match;
+    }
+
+    #[Computed]
+    public function applicationMethod(): array
+    {
+        if (! $this->match) {
+            return [
+                'method' => 'unknown',
+                'email' => null,
+                'url' => null,
+                'instructions' => '',
+            ];
+        }
+
+        return app(DetectApplicationMethod::class)->handle($this->match->listing);
+    }
+
+    #[Computed]
+    public function emailDraft(): ?array
+    {
+        if (! $this->match || $this->applicationMethod['method'] !== 'email') {
+            return null;
+        }
+
+        $json = app(GenerateApplicationEmail::class)->handle($this->match);
+        return json_decode($json, true);
     }
 
     public function close(): void
