@@ -65,9 +65,8 @@ class SyncSearchProfile
 
         $profile->forceFill(['last_synced_at' => now(), 'last_sync_report' => $report])->save();
 
-        foreach ($created as $match) {
-            ProcessJobMatch::dispatch($match->id);
-        }
+        // Fase 2: CV bajo demanda - no generamos CVs automáticamente.
+        // El usuario elige qué ofertas le interesan y genera CVs solo para esas.
 
         return $report;
     }

@@ -115,12 +115,21 @@
             @elseif ($this->match->isPending())
                 <flux:text size="sm" class="flex items-center gap-2">
                     <flux:icon.arrow-path class="size-4 animate-spin text-blue-500" />
-                    {{ $this->match->status === 'new' ? 'En cola...' : 'Adaptando CV...' }}
+                    {{ $this->match->status === 'processing' ? 'Adaptando CV...' : 'En cola...' }}
                 </flux:text>
+            @elseif ($this->match->status === 'failed')
+                <flux:button variant="primary" icon="arrow-path" wire:click="$parent.retry({{ $this->match->id }})">
+                    Reintentar
+                </flux:button>
+            @elseif ($this->match->status === 'low_match')
+                <flux:button variant="primary" icon="sparkles" wire:click="$parent.retry({{ $this->match->id }}, true)">
+                    Generar CV igual
+                </flux:button>
             @else
-                <flux:text size="sm" class="text-zinc-500">
-                    Sin CV adaptado todavía
-                </flux:text>
+                {{-- Fase 2: CV bajo demanda --}}
+                <flux:button variant="primary" icon="sparkles" wire:click="$parent.generateCv({{ $this->match->id }})">
+                    Generar CV adaptado
+                </flux:button>
             @endif
 
             <flux:spacer />

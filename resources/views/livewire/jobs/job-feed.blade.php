@@ -184,13 +184,16 @@
                                     <div class="flex items-center gap-2">
                                         <flux:icon.arrow-path class="size-4 animate-spin text-blue-500" />
                                         <flux:text size="sm">
-                                            {{ $match->status === 'new' ? 'En cola para procesar' : 'Adaptando tu CV…' }}
+                                            {{ $match->status === 'processing' ? 'Adaptando tu CV…' : 'En cola…' }}
                                         </flux:text>
                                     </div>
                                 @elseif ($match->status === 'failed')
                                     <flux:button size="sm" icon="arrow-path" wire:click.stop="retry({{ $match->id }})">Reintentar</flux:button>
                                 @elseif ($match->status === 'low_match')
                                     <flux:button size="sm" icon="sparkles" wire:click.stop="retry({{ $match->id }}, true)">Generar CV igual</flux:button>
+                                @else
+                                    {{-- Fase 2: CV bajo demanda - botón para generar manualmente --}}
+                                    <flux:button size="sm" variant="primary" icon="sparkles" wire:click.stop="generateCv({{ $match->id }})">Generar CV adaptado</flux:button>
                                 @endif
 
                                 @if ($match->status === 'ready')

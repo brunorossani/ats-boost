@@ -420,6 +420,21 @@ class JobFeed extends Component
         unset($this->matches, $this->counts);
     }
 
+    public function generateCv(int $matchId, bool $force = false): void
+    {
+        $match = $this->findMatch($matchId);
+
+        if (! $match || $match->status === JobMatch::STATUS_DISMISSED) {
+            return;
+        }
+
+        $match->update(['status' => JobMatch::STATUS_NEW, 'error' => null]);
+        ProcessJobMatch::dispatch($match->id, force: $force);
+
+        unset($this->matches, $this->counts);
+        $this->succeeded('Generando CV adaptado', 'Vas a verlo cuando esté listo.');
+    }
+
     public function retry(int $matchId, bool $force = false): void
     {
         $match = $this->findMatch($matchId);
